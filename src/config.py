@@ -23,12 +23,14 @@ class CONFIG:
         self.base_path = BASE_PATH
 
         self.data_dir = os.path.join(self.base_path, "data")
-        self.raw_data_dir = os.path.join(self.data_dir, "raw")
-        self.node_features = os.path.join(self.raw_data_dir, "node_information.csv")
-        self.train_data = os.path.join(self.raw_data_dir, "train.txt")
-        self.test_data = os.path.join(self.raw_data_dir, "test.txt")
 
-        self.processed_data_dir = os.path.join(self.data_dir, "processed")
+        # self.raw_data_dir = os.path.join(self.data_dir, "raw")
+        # self.processed_data_dir = os.path.join(self.data_dir, "processed")
+
+        self.node_features = os.path.join(self.data_dir, "node_information.csv")
+        self.train_data = os.path.join(self.data_dir, "train.txt")
+        self.test_data = os.path.join(self.data_dir, "test.txt")
+
 
         self.model_dir = os.path.join(BASE_PATH, "models")
         self.sprs_v_cls_model_path = os.path.join(BASE_PATH, "models", "sparse_vector_classifier.pth")
