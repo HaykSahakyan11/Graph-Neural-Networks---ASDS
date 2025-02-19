@@ -1,0 +1,25 @@
+# Specify the index URL for PyTorch with CUDA 12.1
+--index-url https://download.pytorch.org/whl/cu121
+
+# PyTorch with CUDA 12.1
+torch==2.5.0+cu121
+torchvision==0.20.0+cu121
+torchaudio==2.5.0+cu121
+
+# Return to PyPI for torch-geometric
+--extra-index-url https://pypi.org/simple
+torch-geometric
+
+# Additional find-links for PyTorch Geometric dependencies
+--find-links https://data.pyg.org/whl/torch-2.5.0+cu121.html
+torch-scatter
+torch-sparse
+torch-cluster
+torch-spline-conv
+
+# Additional libraries
+matplotlib
+pandas
+scikit-learn
+
+
