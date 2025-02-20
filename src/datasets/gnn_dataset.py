@@ -29,7 +29,7 @@ def load_graph_edges(filepath, node_id_map):
     Node indices are remapped to be continuous.
     """
     df = pd.read_csv(filepath, sep='\s+', header=None, names=['source', 'target', 'label'])
-    # df = df[df['label'] == 1]
+    df = df[df['label'] == 1]
 
     # Map original node IDs to new indices
     df = df[df['source'].isin(node_id_map) & df['target'].isin(node_id_map)]

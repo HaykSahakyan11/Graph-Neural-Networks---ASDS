@@ -1,34 +1,35 @@
-import pandas as pd
 import torch
+
 from sklearn.model_selection import StratifiedShuffleSplit
-from src.datasets.gnn_dataset import load_link_labels
+from src.config import CONFIG, set_seed
+
+config = CONFIG()
+set_seed()
 
 
-def stratified_split(edge_file, train_ratio=0.85, random_state=42):
+def stratified_split(link_pairs: torch.Tensor, labels: torch.Tensor):
     """
-    Splits the link dataset into train and validation sets while preserving class distribution.
+    Splits the link dataset into training and validation sets while preserving class distribution.
 
     Args:
-        edge_file (str): Path to the dataset containing links.
-        train_ratio (float): Percentage of data to be used for training.
-        random_state (int): Random seed for reproducibility.
+        link_pairs (torch.Tensor): A tensor containing node pairs (edges) in the dataset.
+        labels (torch.Tensor): A tensor containing labels (1 for existing edges, 0 for non-edges).
 
     Returns:
-        train_links (torch.LongTensor): Training link pairs.
-        train_labels (torch.Tensor): Training labels.
-        val_links (torch.LongTensor): Validation link pairs.
-        val_labels (torch.Tensor): Validation labels.
+        tuple:
+            - train_links (torch.LongTensor): Training set link pairs.
+            - train_labels (torch.Tensor): Training set labels.
+            - val_links (torch.LongTensor): Validation set link pairs.
+            - val_labels (torch.Tensor): Validation set labels.
     """
-
-    # Load all link pairs and labels
-    link_pairs, labels = load_link_labels(edge_file)
+    train_size = config.train_params['train_size']
 
     # Convert tensors to numpy for StratifiedShuffleSplit
-    link_pairs_np = link_pairs.T.numpy()
-    labels_np = labels.numpy()
+    link_pairs_np = link_pairs.T.cpu().numpy()  # Move to CPU before .numpy()
+    labels_np = labels.cpu().numpy()  # Move to CPU before .numpy()
 
     # Perform stratified shuffle split
-    strat_split = StratifiedShuffleSplit(n_splits=1, train_size=train_ratio, random_state=random_state)
+    strat_split = StratifiedShuffleSplit(n_splits=1, train_size=train_size)
     train_idx, val_idx = next(strat_split.split(link_pairs_np, labels_np))
 
     # Convert back to tensors

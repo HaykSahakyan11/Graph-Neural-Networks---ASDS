@@ -2,6 +2,7 @@ import os
 import torch
 import random
 import numpy as np
+import sklearn.utils
 
 
 def set_seed(seed=42):
@@ -10,6 +11,7 @@ def set_seed(seed=42):
     """
     random.seed(seed)  # Python random module
     np.random.seed(seed)  # NumPy
+    sklearn.utils.check_random_state(seed)  # scikit-learn
     torch.manual_seed(seed)  # PyTorch
     torch.cuda.manual_seed(seed)  # For CUDA-based computations
     torch.backends.cudnn.deterministic = True  # Ensure deterministic behavior
@@ -41,7 +43,7 @@ class CONFIG:
 
 
         self.train_params = {
-            'train_size': 0.8,
+            'train_size': 0.85,
             'batch_size': 4,
             'epochs': 20,
             'steps_per_epoch': None,
@@ -51,6 +53,24 @@ class CONFIG:
             "learning_rate": 0.001,
             "gradient_accumulation_steps": 1,
             'hidden_dim': 16,
+            'gcn_params': {
+                'hidden_channels': 256,
+                'out_channels': 2,
+                'dropout': 0.2,
+                'threshold': 0.3,
+                'lr': 0.01,
+                'weight_decay': 5e-4,
+                'epochs': 50,
+            },
+            'seal_params': {
+                'hidden_channels': 256,
+                'out_channels': 2,
+                'dropout': 0.2,
+                'threshold': 0.3,
+                'lr': 0.01,
+                'weight_decay': 5e-4,
+                'epochs': 50,
+            },
         }
         self.model_params = {
             'dropout': 0.2,
