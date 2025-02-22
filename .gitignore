@@ -27,7 +27,7 @@ logs/
 
 # Large binary/model files (tracked via Git LFS via .gitattributes)
 *.pt
-*.pth
+#*.pth
 *.ckpt
 *.bin
 
