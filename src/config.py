@@ -35,9 +35,9 @@ class CONFIG:
         self.test_data = os.path.join(self.data_dir, "test.txt")
 
         self.model_dir = os.path.join(BASE_PATH, "models")
-        self.best_model_path = os.path.join(self.model_dir, "best_model.pth")
+        self.best_model_path = os.path.join(self.model_dir, "SEAL_best_acc_0.817.pth")
         self.gcn_gat_model_path = os.path.join(self.model_dir, "gcn_gat_model.pth")
-        self.seal_model_path = os.path.join(self.model_dir, "seal_model.pth")
+        self.seal_model_path = os.path.join(self.model_dir, "SEAL_best_acc_0.817.pth")
 
         self.sprs_v_cls_model_path = os.path.join(BASE_PATH, "models", "sparse_vector_classifier.pth")
 

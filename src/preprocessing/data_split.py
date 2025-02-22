@@ -24,15 +24,13 @@ def stratified_split(link_pairs: torch.Tensor, labels: torch.Tensor):
     """
     train_size = config.train_params['train_size']
 
-    # Convert tensors to numpy for StratifiedShuffleSplit
-    link_pairs_np = link_pairs.T.cpu().numpy()  # Move to CPU before .numpy()
-    labels_np = labels.cpu().numpy()  # Move to CPU before .numpy()
+    link_pairs_np = link_pairs.T.cpu().numpy()
+    labels_np = labels.cpu().numpy()
 
     # Perform stratified shuffle split
     strat_split = StratifiedShuffleSplit(n_splits=1, train_size=train_size)
     train_idx, val_idx = next(strat_split.split(link_pairs_np, labels_np))
 
-    # Convert back to tensors
     train_links = torch.tensor(link_pairs_np[train_idx].T, dtype=torch.long)
     train_labels = torch.tensor(labels_np[train_idx], dtype=torch.float)
     val_links = torch.tensor(link_pairs_np[val_idx].T, dtype=torch.long)
@@ -42,7 +40,7 @@ def stratified_split(link_pairs: torch.Tensor, labels: torch.Tensor):
 
 
 if __name__ == '__main__':
-    edge_file = "path/to/train.txt"  # Update this path as needed
+    edge_file = "path/to/train.txt"
     train_links, train_labels, val_links, val_labels = stratified_split(edge_file)
 
     print("Train set size:", train_links.shape[1])

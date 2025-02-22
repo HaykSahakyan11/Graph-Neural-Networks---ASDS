@@ -13,7 +13,11 @@ config = CONFIG()
 set_seed()
 
 
-def predict_seal_model(model_path, file_path):
+def predict_seal_model(model_path=None, file_path=None):
+    if model_path == None:
+        model_path = config.seal_model_path
+    if file_path == None:
+        file_path = config.test_data
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     hidden_channels = config.train_params['seal_params']['hidden_channels']
