@@ -74,6 +74,7 @@ class CONFIG:
                 'lr': 0.001,
                 'weight_decay': 5e-4,
                 'epochs': 100,
+                # 'epochs': 5,
             },
         }
         self.model_params = {

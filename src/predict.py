@@ -18,6 +18,7 @@ def predict_seal_model(model_path=None, file_path=None):
         model_path = config.seal_model_path
     if file_path == None:
         file_path = config.test_data
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     hidden_channels = config.train_params['seal_params']['hidden_channels']
@@ -29,7 +30,7 @@ def predict_seal_model(model_path=None, file_path=None):
 
     dataset = ACTORNETWORKData(node_feature_file, edge_file)
     node_id_map = dataset.node_id_map
-    link_pairs_to_predict = load_test_links(config.test_data, node_id_map)
+    link_pairs_to_predict = load_test_links(file_path, node_id_map)
 
     in_channels = dataset.x.shape[1]
 
@@ -89,7 +90,7 @@ if __name__ == "__main__":
         file_path=test_file_path,
     )
     print("Binary Predictions:", predictions)
-    predictions = zip(np.array(range(len(test_set))), predictions)
+    predicti= ons = zip(np.array(range(len(test_set))), predictions)
 
     data_dir = config.data_dir
     test_predictions_csv = os.path.join(data_dir, "test_predictions.csv")
