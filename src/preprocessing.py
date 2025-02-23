@@ -1,4 +1,5 @@
 import torch
+import pandas as pd
 
 from sklearn.model_selection import StratifiedShuffleSplit
 from src.config import CONFIG, set_seed
@@ -37,6 +38,51 @@ def stratified_split(link_pairs: torch.Tensor, labels: torch.Tensor):
     val_labels = torch.tensor(labels_np[val_idx], dtype=torch.float)
 
     return train_links, train_labels, val_links, val_labels
+
+
+def load_node_features(filepath):
+    df = pd.read_csv(filepath, header=None)
+    node_indices = df.iloc[:, 0].values
+    features = df.iloc[:, 1:].values.astype(float)
+    x = torch.tensor(features, dtype=torch.float)
+
+    node_id_map = {old_id: new_id for new_id, old_id in enumerate(node_indices)}
+    return node_id_map, x
+
+
+def load_graph_edges(filepath, node_id_map):
+    df = pd.read_csv(filepath, sep='\s+', header=None, names=['source', 'target', 'label'])
+    df = df[df['label'] == 1]
+
+    df = df[df['source'].isin(node_id_map) & df['target'].isin(node_id_map)]
+    df['source'] = df['source'].map(node_id_map)
+    df['target'] = df['target'].map(node_id_map)
+
+    edge_index = torch.tensor(df[['source', 'target']].values.T, dtype=torch.long)
+    return edge_index
+
+
+def load_link_labels(filepath, node_id_map):
+    df = pd.read_csv(filepath, sep='\s+', header=None, names=['source', 'target', 'label'])
+
+    df = df[df['source'].isin(node_id_map) & df['target'].isin(node_id_map)]
+    df['source'] = df['source'].map(node_id_map)
+    df['target'] = df['target'].map(node_id_map)
+
+    link_pairs = torch.tensor(df[['source', 'target']].values.T, dtype=torch.long)
+    labels = torch.tensor(df['label'].values, dtype=torch.float)
+    return link_pairs, labels
+
+
+def load_test_links(filepath, node_id_map):
+    df = pd.read_csv(filepath, sep='\s+', header=None, names=['source', 'target'])
+
+    df = df[df['source'].isin(node_id_map) & df['target'].isin(node_id_map)]
+    df['source'] = df['source'].map(node_id_map)
+    df['target'] = df['target'].map(node_id_map)
+
+    test_links = torch.tensor(df.values.T, dtype=torch.long)
+    return test_links
 
 
 if __name__ == '__main__':

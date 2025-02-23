@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
-from torch.nn import Dropout
 import torch.nn.functional as F
+
+from torch.nn import Dropout
 from torch_geometric.nn import GCNConv, BatchNorm, GATConv, SAGEConv, global_add_pool
 from src.config import CONFIG
 

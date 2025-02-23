@@ -5,8 +5,9 @@ import numpy as np
 
 from torch_geometric.loader import DataLoader
 
-from src.datasets.gnn_dataset import ACTORNETWORKData, load_test_links
-from src.models.model import GNNModel, GCNModel, SEALModel
+from src.datasets import ACTORNETWORKData
+from src.preprocessing import load_test_links
+from src.model import SEALModel
 from src.config import CONFIG, set_seed
 
 config = CONFIG()
