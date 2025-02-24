@@ -5,7 +5,7 @@ import numpy as np
 
 from torch_geometric.loader import DataLoader
 
-from src.datasets import ACTORNETWORKData
+from src.datasets import get_actors_network_graph
 from src.preprocessing import load_test_links
 from src.model import SEALModel
 from src.config import CONFIG, set_seed
@@ -14,26 +14,21 @@ config = CONFIG()
 set_seed()
 
 
-def predict_seal_model(model_path=None, file_path=None):
-    if model_path == None:
-        model_path = config.seal_model_path
-    if file_path == None:
-        file_path = config.test_data
-
+def predict_seal_model(model_path=None, file_path=None, link_pairs_to_predict=None):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     hidden_channels = config.train_params['seal_params']['hidden_channels']
     out_channels = config.train_params['seal_params']['out_channels']
     dropout = config.train_params['seal_params']['dropout']
 
-    node_feature_file = config.node_features
-    edge_file = config.train_data
-
-    dataset = ACTORNETWORKData(node_feature_file, edge_file)
-    node_id_map = dataset.node_id_map
-    link_pairs_to_predict = load_test_links(file_path, node_id_map)
-
+    dataset = get_actors_network_graph()
     in_channels = dataset.x.shape[1]
+    node_id_map = dataset.node_id_map
+
+    if link_pairs_to_predict is None:
+        if file_path == None:
+            file_path = config.test_data
+        link_pairs_to_predict = load_test_links(file_path, node_id_map)
 
     model = SEALModel(
         in_channels=in_channels,
@@ -41,6 +36,9 @@ def predict_seal_model(model_path=None, file_path=None):
         out_channels=out_channels,
         dropout=dropout
     ).to(device)
+
+    if model_path == None or model_path == "seal_model":
+        model_path = config.seal_model_path
 
     state_dict = torch.load(model_path, map_location=device, weights_only=True)
     model.load_state_dict(state_dict)
@@ -83,15 +81,14 @@ if __name__ == "__main__":
     test_set = [element[0].split(" ") for element in test_set]
     test_set = [[int(element[0]), int(element[1])] for element in test_set]
 
-    model_dir = config.model_dir
-    model_path = os.path.join(model_dir, "SEAL_best_acc_0.806.pth")
+    model_path = config.best_model_path
 
     predictions = predict_seal_model(
         model_path=model_path,
         file_path=test_file_path,
     )
     print("Binary Predictions:", predictions)
-    predicti= ons = zip(np.array(range(len(test_set))), predictions)
+    predictions = zip(np.array(range(len(test_set))), predictions)
 
     data_dir = config.data_dir
     test_predictions_csv = os.path.join(data_dir, "test_predictions.csv")

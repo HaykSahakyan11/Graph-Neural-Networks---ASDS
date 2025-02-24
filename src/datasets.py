@@ -34,13 +34,27 @@ class ACTORNETWORKData(Data):
         return self.labels
 
 
-if __name__ == '__main__':
+def get_actors_network_graph():
     node_feature_file = config.node_features
     edge_file = config.train_data
     dataset = ACTORNETWORKData(node_feature_file, edge_file)
+    return dataset
+
+
+if __name__ == '__main__':
+    dataset = get_actors_network_graph()
 
     print("Dataset loaded successfully!")
     print("Graph structure:", dataset.edge_index.shape)
     print("Number of nodes:", dataset.x.shape[0])
     print("Number of edges:", dataset.edge_index.shape[1])
     print("Number of link pairs:", dataset.link_pairs.shape[1])
+    # node_feature_file = config.node_features
+    # edge_file = config.train_data
+    # dataset = ACTORNETWORKData(node_feature_file, edge_file)
+    #
+    # print("Dataset loaded successfully!")
+    # print("Graph structure:", dataset.edge_index.shape)
+    # print("Number of nodes:", dataset.x.shape[0])
+    # print("Number of edges:", dataset.edge_index.shape[1])
+    # print("Number of link pairs:", dataset.link_pairs.shape[1])

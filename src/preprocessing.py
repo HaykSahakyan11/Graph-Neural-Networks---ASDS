@@ -2,6 +2,8 @@ import torch
 import pandas as pd
 
 from sklearn.model_selection import StratifiedShuffleSplit
+
+# from src.datasets import ACTORNETWORKData
 from src.config import CONFIG, set_seed
 
 config = CONFIG()
@@ -84,10 +86,3 @@ def load_test_links(filepath, node_id_map):
     test_links = torch.tensor(df.values.T, dtype=torch.long)
     return test_links
 
-
-if __name__ == '__main__':
-    edge_file = "path/to/train.txt"
-    train_links, train_labels, val_links, val_labels = stratified_split(edge_file)
-
-    print("Train set size:", train_links.shape[1])
-    print("Validation set size:", val_links.shape[1])

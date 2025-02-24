@@ -27,34 +27,25 @@ class CONFIG:
 
         self.data_dir = os.path.join(self.base_path, "data")
 
-        # self.raw_data_dir = os.path.join(self.data_dir, "raw")
-        # self.processed_data_dir = os.path.join(self.data_dir, "processed")
-
         self.node_features = os.path.join(self.data_dir, "node_information.csv")
         self.train_data = os.path.join(self.data_dir, "train.txt")
         self.test_data = os.path.join(self.data_dir, "test.txt")
 
         self.model_dir = os.path.join(BASE_PATH, "models")
-        self.best_model_path = os.path.join(self.model_dir, "SEAL_best_acc_0.817.pth")
-        self.gcn_gat_model_path = os.path.join(self.model_dir, "gcn_gat_model.pth")
-        self.seal_model_path = os.path.join(self.model_dir, "SEAL_best_acc_0.817.pth")
-
-        self.sprs_v_cls_model_path = os.path.join(BASE_PATH, "models", "sparse_vector_classifier.pth")
+        self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_79_best_acc_0.803.pth")
+        # self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_80_best_acc_0.829.pth")
+        self.gcn_gat_model_path = os.path.join(self.model_dir, "GCN_GAT_epoch_76_best_acc_0.686.pth")
+        self.seal_model_path = os.path.join(self.model_dir, "SEAL_epoch_79_best_acc_0.803.pth")
 
         self.log_dir = os.path.join(BASE_PATH, "logs")
 
         self.model_name = 'bert-base-uncased'
 
         self.train_params = {
-            'train_size': 0.85,
+            'train_size': 0.80,
             'batch_size': 4,
             'epochs': 20,
-            'steps_per_epoch': None,
-            'latest_checkpoint_step': 50,
-            'summary_step': 10,
-            'max_checkpoints_to_keep': 5,
             "learning_rate": 0.001,
-            "gradient_accumulation_steps": 1,
             'hidden_dim': 16,
             'input_channels': 932,
             'gcn_params': {
@@ -71,12 +62,9 @@ class CONFIG:
                 'out_channels': 64,
                 'dropout': 0.3,
                 'threshold': 0.5,
-                'lr': 0.001,
+                'lr': 0.0001,
                 'weight_decay': 5e-4,
                 'epochs': 100,
                 # 'epochs': 5,
             },
-        }
-        self.model_params = {
-            'dropout': 0.2,
         }
