@@ -64,7 +64,6 @@ def predict_seal_model(model_path=None, file_path=None, link_pairs_to_predict=No
             all_preds.append(preds)
 
     all_preds = torch.cat(all_preds, dim=0)
-    all_preds = torch.sigmoid(all_preds)
     predictions = (all_preds > 0.5).float().to("cpu").numpy()
     predictions = list(int(pred) for pred in predictions)
 
