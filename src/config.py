@@ -32,10 +32,10 @@ class CONFIG:
         self.test_data = os.path.join(self.data_dir, "test.txt")
 
         self.model_dir = os.path.join(BASE_PATH, "models")
-        self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_79_best_acc_0.803.pth")
-        # self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_80_best_acc_0.829.pth")
+        # self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_79_best_acc_0.803.pth")
+        self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_41_best_acc_0.723.pth")
         self.gcn_gat_model_path = os.path.join(self.model_dir, "GCN_GAT_epoch_76_best_acc_0.686.pth")
-        self.seal_model_path = os.path.join(self.model_dir, "SEAL_epoch_79_best_acc_0.803.pth")
+        self.seal_model_path = os.path.join(self.model_dir, "SEAL_epoch_41_best_acc_0.723.pth")
 
         self.log_dir = os.path.join(BASE_PATH, "logs")
 

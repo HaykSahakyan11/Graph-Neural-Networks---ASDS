@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.model_selection import StratifiedShuffleSplit
 
 # from src.datasets import ACTORNETWORKData
-from src.config import CONFIG, set_seed
+from config import CONFIG, set_seed
 
 config = CONFIG()
 set_seed()

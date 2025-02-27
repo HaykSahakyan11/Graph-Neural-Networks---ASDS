@@ -5,10 +5,10 @@ import numpy as np
 
 from torch_geometric.loader import DataLoader
 
-from src.datasets import get_actors_network_graph
-from src.preprocessing import load_test_links
-from src.model import SEALModel
-from src.config import CONFIG, set_seed
+from datasets import get_actors_network_graph
+from preprocessing import load_test_links
+from model import SEALModel, ImprovedSEALModel
+from config import CONFIG, set_seed
 
 config = CONFIG()
 set_seed()
@@ -30,7 +30,7 @@ def predict_seal_model(model_path=None, file_path=None, link_pairs_to_predict=No
             file_path = config.test_data
         link_pairs_to_predict = load_test_links(file_path, node_id_map)
 
-    model = SEALModel(
+    model = ImprovedSEALModel(
         in_channels=in_channels,
         hidden_channels=hidden_channels,
         out_channels=out_channels,
@@ -40,7 +40,7 @@ def predict_seal_model(model_path=None, file_path=None, link_pairs_to_predict=No
     if model_path == None or model_path == "seal_model":
         model_path = config.seal_model_path
 
-    state_dict = torch.load(model_path, map_location=device, weights_only=True)
+    state_dict = torch.load(model_path, map_location=device, weights_only=False)
     model.load_state_dict(state_dict)
     model.eval()
 

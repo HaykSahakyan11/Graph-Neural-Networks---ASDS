@@ -3,11 +3,11 @@ import pandas as pd
 
 from sklearn.metrics import accuracy_score, roc_auc_score, precision_recall_fscore_support
 
-from src.datasets import get_actors_network_graph
-from src.preprocessing import load_link_labels
-from src.model import SEALModel, GCNModel
-from src.config import CONFIG
-from src.predict import predict_seal_model
+from datasets import get_actors_network_graph
+from preprocessing import load_link_labels
+from model import SEALModel, GCNModel
+from config import CONFIG
+from predict import predict_seal_model
 
 config = CONFIG()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

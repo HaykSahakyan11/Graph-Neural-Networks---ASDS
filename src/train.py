@@ -8,10 +8,10 @@ from tqdm import tqdm
 
 from torch_geometric.loader import DataLoader
 from sklearn.metrics import accuracy_score, roc_auc_score, precision_recall_fscore_support
-from src.datasets import ACTORNETWORKData
-from src.preprocessing import stratified_split
-from src.model import GCNModel, SEALModel
-from src.config import CONFIG, set_seed
+from datasets import ACTORNETWORKData
+from preprocessing import stratified_split
+from model import GCNModel, SEALModel, ImprovedSEALModel
+from config import CONFIG, set_seed
 
 set_seed()
 config = CONFIG()
@@ -90,7 +90,7 @@ class Trainer:
 
         train_links, train_labels, val_links, val_labels = stratified_split(dataset.link_pairs, dataset.labels)
 
-        model = SEALModel(
+        model = ImprovedSEALModel(
             in_channels=in_channels, hidden_channels=self.hid_channels,
             out_channels=self.out_channels, dropout=self.dropout
         ).to(device)

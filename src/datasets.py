@@ -1,8 +1,8 @@
 import torch
 
 from torch_geometric.data import Data as Data
-from src.preprocessing import load_node_features, load_graph_edges, load_link_labels
-from src.config import CONFIG
+from preprocessing import load_node_features, load_graph_edges, load_link_labels
+from config import CONFIG
 
 config = CONFIG()
 
