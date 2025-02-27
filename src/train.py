@@ -3,14 +3,17 @@ import os
 import pandas as pd
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from tqdm import tqdm
 
 from torch_geometric.loader import DataLoader
+from torch_geometric.utils import degree
+
 from sklearn.metrics import accuracy_score, roc_auc_score, precision_recall_fscore_support
-from src.datasets import ACTORNETWORKData
+from src.datasets import ACTORNETWORKData, ACTORNETWORKData_v2
 from src.preprocessing import stratified_split
-from src.model import GCNModel, SEALModel
+from src.model import GCNModel, SEALModel, ImprovedSEALModel, EvenBetterSEALModel, GCN_Model
 from src.config import CONFIG, set_seed
 
 set_seed()
@@ -21,9 +24,16 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def save_best_model(model_state, best_acc, best_epoch, model_name):
     model_dir = config.model_dir
-    to_save_path = os.path.join(model_dir, f"{model_name}_epoch_{best_epoch}_best_acc_{best_acc:.3f}.pth")
+    if model_name == "GCN_Model":
+        to_save_path = os.path.join(model_dir, f"{model_name}_epoch_{best_epoch}_best_loss_{best_acc:.3f}.pth")
+    else:
+        to_save_path = os.path.join(model_dir, f"{model_name}_epoch_{best_epoch}_best_acc_{best_acc:.3f}.pth")
     torch.save(model_state, to_save_path)
-    print(f"Best model saved at epoch {best_epoch} with Accuracy: {best_acc:.4f}")
+    if model_name == "GCN_Model":
+        output_text = f"Best model saved at epoch {best_epoch} with Loss: {best_acc:.4f}"
+    else:
+        output_text = f"Best model saved at epoch {best_epoch} with Accuracy: {best_acc:.4f}"
+    print(output_text)
 
 
 def save_history(history, model_name):
@@ -69,31 +79,127 @@ class Trainer:
             self.lr = config.train_params['seal_params']['lr']
             self.weight_decay = config.train_params['seal_params']['weight_decay']
             self.epochs = config.train_params['seal_params']['epochs']
+        elif self.model_name == 'GCN_Model':
+            self.hid_channels = config.train_params['GCN_Model']['hidden_channels']
+            self.out_channels = config.train_params['GCN_Model']['out_channels']
+            self.lr = config.train_params['GCN_Model']['lr']
+            self.weight_decay = config.train_params['GCN_Model']['weight_decay']
+            self.epochs = config.train_params['GCN_Model']['epochs']
 
     def train(self):
         node_feature_file = self.config.node_features
         edge_file = self.config.train_data
-        dataset = ACTORNETWORKData(node_feature_file, edge_file)
+        dataset = None
+        if self.model_name == 'GCN_Model':
+            dataset = ACTORNETWORKData_v2(node_feature_file, edge_file)
+        else:
+            dataset = ACTORNETWORKData(node_feature_file, edge_file)
         history = []
 
         if self.model_name == 'GCN_GAT':
             history = self.train_gcn_gat_model(dataset=dataset)
         elif self.model_name == 'SEAL':
             history = self.train_seal_model(dataset=dataset)
+        elif self.model_name == 'GCN_Model':
+            history = self.train_gcn_model(dataset=dataset)
 
         save_history(history, self.model_name)
         return history
 
+    def train_gcn_model(self, dataset):
+        dataset = dataset.to(self.device)
+        in_channels = dataset.x.shape[1]
+
+        train_labels = dataset.train_labels
+        train_links = dataset.train_edge_pairs
+
+        # train_links, train_labels, val_links, val_labels = stratified_split(train_links, train_labels)
+        # train_labels = train_labels.to(self.device)
+        # train_links = train_links.to(self.device)
+        # val_links, val_labels = val_links.to(self.device), val_labels.to(self.device)
+
+        model = GCN_Model(
+            in_channels=in_channels, hidden_channels=self.hid_channels,
+            out_channels=self.out_channels
+        ).to(self.device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        history = []
+        best_acc = 0.0
+        best_model_state = None
+        best_epoch = 0
+        min_loss = 100.0
+
+        model.train()
+        for epoch in range(self.epochs):
+            optimizer.zero_grad()
+            pred = model(dataset.to(self.device), train_links.to(self.device))
+            loss = F.binary_cross_entropy(pred, train_labels)
+            loss.backward()
+            optimizer.step()
+
+            if epoch % 10 == 0:
+                with torch.no_grad():
+                    pred_np = pred.detach().cpu().numpy()
+                    auc = roc_auc_score(train_labels.cpu().numpy(), pred_np)
+                print(f'Epoch {epoch:03d} | Loss: {loss.item():.4f} | AUC: {auc:.4f}')
+            if loss < min_loss:
+                min_loss = loss
+                best_model_state = model.state_dict()
+                best_epoch = epoch + 1
+        save_best_model(best_model_state, min_loss, best_epoch, model_name="GCN_Model")
+
+        #     model.eval()
+        #     all_preds, all_labels = [], []
+        #     with torch.no_grad():
+        #         preds = model(dataset.to(self.device), val_links.to(self.device))
+        #         all_preds.append(preds)
+        #         all_labels.append(val_labels)
+        #
+        #         all_preds = torch.cat(all_preds)
+        #         all_labels = torch.cat(all_labels)
+        #         val_loss = F.binary_cross_entropy(all_preds, all_labels)
+        #
+        #         val_preds_bin = (all_preds > 0.5).float()
+        #         accuracy = accuracy_score(all_labels.cpu(), val_preds_bin.cpu())
+        #         auc = roc_auc_score(all_labels.cpu(), all_preds.cpu())
+        #         precision, recall, f1, _ = precision_recall_fscore_support(
+        #             all_labels.cpu(), val_preds_bin.cpu(), average='binary')
+        #
+        #         print(f"Validation Loss: {val_loss.item():.4f}, Accuracy: {accuracy:.4f}, "
+        #               f"AUC: {auc:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, "
+        #               f"F1-score: {f1:.4f}")
+        #
+        #         history.append({
+        #             'epoch': epoch + 1,
+        #             'val_loss': val_loss.item(),
+        #             'accuracy': accuracy,
+        #             'auc': auc.item(),
+        #             'precision': precision,
+        #             'recall': recall,
+        #             'f1_score': f1
+        #         })
+        #
+        #         if accuracy > best_acc:
+        #             best_acc = accuracy
+        #             best_model_state = model.state_dict()
+        #             best_epoch = epoch + 1
+        #
+        # save_best_model(best_model_state, best_acc, best_epoch, model_name="GCN_Model")
+        # return history
+
     def train_seal_model(self, dataset):
+
         dataset = dataset.to(self.device)
         in_channels = dataset.x.shape[1]
 
         train_links, train_labels, val_links, val_labels = stratified_split(dataset.link_pairs, dataset.labels)
 
         model = SEALModel(
+            # model = ImprovedSEALModel(
+            # model = EvenBetterSEALModel(
             in_channels=in_channels, hidden_channels=self.hid_channels,
             out_channels=self.out_channels, dropout=self.dropout
-        ).to(device)
+        ).to(self.device)
         optimizer = optim.Adam(model.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         criterion = nn.BCEWithLogitsLoss()
 
@@ -110,17 +216,17 @@ class Trainer:
             total_loss = 0
             for batch_links, batch_labels in train_loader:
                 optimizer.zero_grad()
-                batch_links = batch_links.t().to(device)
-                batch_labels = batch_labels.to(device)
-                link_preds = model(dataset.x.to(device), dataset.edge_index.to(device), None, batch_links)
+                batch_links = batch_links.t().to(self.device)
+                batch_labels = batch_labels.to(self.device)
+                link_preds = model(dataset.x.to(self.device), dataset.edge_index.to(self.device), None, batch_links)
                 loss = criterion(link_preds, batch_labels)
+                # loss = F.binary_cross_entropy(link_preds, batch_labels)
                 loss.backward()
                 optimizer.step()
                 total_loss += loss.item()
             avg_loss = total_loss / len(train_loader)
             print(f"Epoch {epoch + 1}, Loss: {avg_loss:.4f}")
 
-            # Validation after each epoch
             model.eval()
             all_preds, all_labels = [], []
             with torch.no_grad():
@@ -134,6 +240,7 @@ class Trainer:
                 all_preds = torch.cat(all_preds)
                 all_labels = torch.cat(all_labels)
                 val_loss = criterion(all_preds, all_labels)
+                # val_loss = F.binary_cross_entropy(all_preds, all_labels)
 
                 val_preds_bin = (all_preds > 0.5).float()
                 accuracy = accuracy_score(all_labels.cpu(), val_preds_bin.cpu())
@@ -154,13 +261,11 @@ class Trainer:
                     'f1_score': f1
                 })
 
-                # Update best model if current model is better
                 if accuracy > best_acc:
                     best_acc = accuracy
                     best_model_state = model.state_dict()
                     best_epoch = epoch + 1
 
-        # Save best model after training completes
         save_best_model(best_model_state, best_acc, best_epoch, model_name="SEAL")
         return history
 
@@ -235,7 +340,8 @@ class Trainer:
 
 
 if __name__ == '__main__':
-    trainer = Trainer(model_name="SEAL")
+    # trainer = Trainer(model_name="SEAL")
     # trainer = Trainer(model_name="GCN_GAT")
+    trainer = Trainer(model_name="GCN_Model")
     history = trainer.train()
     print(history)

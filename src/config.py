@@ -36,13 +36,14 @@ class CONFIG:
         # self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_80_best_acc_0.829.pth")
         self.gcn_gat_model_path = os.path.join(self.model_dir, "GCN_GAT_epoch_76_best_acc_0.686.pth")
         self.seal_model_path = os.path.join(self.model_dir, "SEAL_epoch_79_best_acc_0.803.pth")
+        self.gcn_model_path = os.path.join(self.model_dir, "GCN_Model_epoch_995_best_loss_0.205.pth")
 
         self.log_dir = os.path.join(BASE_PATH, "logs")
 
         self.model_name = 'bert-base-uncased'
 
         self.train_params = {
-            'train_size': 0.80,
+            'train_size': 0.95,
             'batch_size': 4,
             'epochs': 20,
             "learning_rate": 0.001,
@@ -64,7 +65,16 @@ class CONFIG:
                 'threshold': 0.5,
                 'lr': 0.0001,
                 'weight_decay': 5e-4,
-                'epochs': 100,
-                # 'epochs': 5,
+                'epochs': 200,
+                # 'epochs': 20,
+            },
+            'GCN_Model': {
+                'hidden_channels': 64,
+                'out_channels': 32,
+                'lr': 0.001,
+                'weight_decay': 5e-6,
+                'epochs': 1000,
             },
         }
+
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
