@@ -41,7 +41,6 @@ def predict_gcn_model(model_path=None, file_path=None, link_pairs_to_predict=Non
         test_df = pd.read_csv(file_path, sep=' ', header=None, names=['src', 'dst'])
         test_edge_pairs = torch.tensor(test_df[['src', 'dst']].values.T, dtype=torch.long)
 
-    all_preds = []
     with torch.no_grad():
         z = model.encode(dataset.x, dataset.edge_index)
         test_pred = model.decode_mlp(z, test_edge_pairs)
@@ -130,7 +129,7 @@ if __name__ == "__main__":
     predictions = zip(np.array(range(len(test_set))), predictions)
 
     data_dir = config.data_dir
-    test_predictions_csv = os.path.join(data_dir, "test_predictions_gcn_1000_epoch.csv")
+    test_predictions_csv = os.path.join(data_dir, "submission.csv")
     with open(test_predictions_csv, "w") as pred:
         csv_out = csv.writer(pred)
         csv_out.writerow(i for i in ["ID", "Predicted"])

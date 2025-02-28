@@ -1,16 +1,14 @@
 import os
-
 import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
 from tqdm import tqdm
-
 from torch_geometric.loader import DataLoader
-from torch_geometric.utils import degree
-
 from sklearn.metrics import accuracy_score, roc_auc_score, precision_recall_fscore_support
+
 from src.datasets import ACTORNETWORKData, ACTORNETWORKData_v2
 from src.preprocessing import stratified_split
 from src.model import GCNModel, SEALModel, ImprovedSEALModel, EvenBetterSEALModel, GCN_Model
@@ -38,7 +36,7 @@ def save_best_model(model_state, best_acc, best_epoch, model_name):
 
 def save_history(history, model_name):
     df = pd.DataFrame(history)
-    history_path = os.path.join(config.log_dir, f"{model_name}_history.csv")
+    history_path = os.path.join(config.log_dir, f"{model_name}_nd_history.csv")
     df.to_csv(history_path, index=False)
     print(f"Training history saved at {history_path}")
 
@@ -341,7 +339,7 @@ class Trainer:
 
 if __name__ == '__main__':
     # trainer = Trainer(model_name="SEAL")
-    # trainer = Trainer(model_name="GCN_GAT")
-    trainer = Trainer(model_name="GCN_Model")
+    trainer = Trainer(model_name="GCN_GAT")
+    # trainer = Trainer(model_name="GCN_Model")
     history = trainer.train()
     print(history)

@@ -19,8 +19,11 @@ class ACTORNETWORKData(Data):
         edge_index = load_graph_edges(edge_file, node_id_map)
 
         link_pairs, labels = load_link_labels(edge_file, node_id_map)
-
-        super().__init__(x=x, edge_index=edge_index)
+        num_nodes = x.size(0)
+        deg = degree(edge_index[0], num_nodes=num_nodes).unsqueeze(1)
+        x_aug = torch.cat([x, deg], dim=1)
+        super().__init__(x=x_aug, edge_index=edge_index)
+        # super().__init__(x=x, edge_index=edge_index)
 
         self.link_pairs = link_pairs
         self.labels = labels

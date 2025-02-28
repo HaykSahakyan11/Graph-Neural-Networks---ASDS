@@ -32,10 +32,10 @@ class CONFIG:
         self.test_data = os.path.join(self.data_dir, "test.txt")
 
         self.model_dir = os.path.join(BASE_PATH, "models")
-        self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_79_best_acc_0.803.pth")
+        self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_77_best_acc_0.822.pth")
         # self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_80_best_acc_0.829.pth")
         self.gcn_gat_model_path = os.path.join(self.model_dir, "GCN_GAT_epoch_76_best_acc_0.686.pth")
-        self.seal_model_path = os.path.join(self.model_dir, "SEAL_epoch_79_best_acc_0.803.pth")
+        self.seal_model_path = os.path.join(self.model_dir, "SEAL_epoch_77_best_acc_0.822.pth")
         self.gcn_model_path = os.path.join(self.model_dir, "GCN_Model_epoch_995_best_loss_0.205.pth")
 
         self.log_dir = os.path.join(BASE_PATH, "logs")
@@ -43,7 +43,7 @@ class CONFIG:
         self.model_name = 'bert-base-uncased'
 
         self.train_params = {
-            'train_size': 0.95,
+            'train_size': 0.85,
             'batch_size': 4,
             'epochs': 20,
             "learning_rate": 0.001,
@@ -63,15 +63,15 @@ class CONFIG:
                 'out_channels': 64,
                 'dropout': 0.3,
                 'threshold': 0.5,
-                'lr': 0.0001,
+                'lr': 0.001,
                 'weight_decay': 5e-4,
-                'epochs': 200,
+                'epochs': 100,
                 # 'epochs': 20,
             },
             'GCN_Model': {
                 'hidden_channels': 64,
                 'out_channels': 32,
-                'lr': 0.001,
+                'lr': 0.01,
                 'weight_decay': 5e-6,
                 'epochs': 1000,
             },
