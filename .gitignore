@@ -21,7 +21,7 @@ venv.bak/
 .ipynb_checkpoints/
 
 # Logs and temporary files
-logs/
+#logs/
 tmp/
 *.log
 *.tmp

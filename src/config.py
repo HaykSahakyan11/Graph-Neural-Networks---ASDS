@@ -36,7 +36,7 @@ class CONFIG:
         # self.best_model_path = os.path.join(self.model_dir, "SEAL_epoch_80_best_acc_0.829.pth")
         self.gcn_gat_model_path = os.path.join(self.model_dir, "GCN_GAT_epoch_76_best_acc_0.686.pth")
         self.seal_model_path = os.path.join(self.model_dir, "SEAL_epoch_77_best_acc_0.822.pth")
-        self.gcn_model_path = os.path.join(self.model_dir, "GCN_Model_epoch_995_best_loss_0.205.pth")
+        self.sageconv_model_path = os.path.join(self.model_dir, "SageConv_Model_epoch_995_best_loss_0.205.pth")
 
         self.log_dir = os.path.join(BASE_PATH, "logs")
 
@@ -68,12 +68,12 @@ class CONFIG:
                 'epochs': 100,
                 # 'epochs': 20,
             },
-            'GCN_Model': {
+            'SageConv_Model': {
                 'hidden_channels': 64,
                 'out_channels': 32,
-                'lr': 0.01,
+                'lr': 0.001,
                 'weight_decay': 5e-6,
-                'epochs': 1000,
+                'epochs': 100,
             },
         }
 

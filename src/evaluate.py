@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score, precision_recall_fsco
 
 from src.datasets import get_actors_network_graph
 from src.preprocessing import load_link_labels
-from src.model import SEALModel, GCNModel
+from src.model import SEALModel, GCNGATModel
 from src.config import CONFIG
 from src.predict import predict_seal_model
 
@@ -24,7 +24,7 @@ def init_model(model_name='best_model'):
         hid_channels = config.train_params['gcn_params']['hidden_channels']
         out_channels = config.train_params['gcn_params']['out_channels']
         dropout = config.train_params['gcn_params']['dropout']
-        model = GCNModel(in_channels, hid_channels, out_channels, dropout).to(device)
+        model = GCNGATModel(in_channels, hid_channels, out_channels, dropout).to(device)
     return model
 
 

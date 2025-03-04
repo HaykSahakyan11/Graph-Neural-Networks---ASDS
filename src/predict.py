@@ -8,47 +8,11 @@ from torch_geometric.loader import DataLoader
 
 from src.datasets import get_actors_network_graph, ACTORNETWORKData_v2
 from src.preprocessing import load_test_links
-from src.model import SEALModel, GCN_Model
+from src.model import SEALModel, SageConv_Model
 from src.config import CONFIG, set_seed
 
 config = CONFIG()
 set_seed()
-
-def predict_gcn_model(model_path=None, file_path=None, link_pairs_to_predict=None):
-    hidden_channels = config.train_params['GCN_Model']['hidden_channels']
-    out_channels = config.train_params['GCN_Model']['out_channels']
-
-    node_feature_file = config.node_features
-    edge_file = config.train_data
-
-    dataset = ACTORNETWORKData_v2(node_feature_file, edge_file)
-    in_channels = dataset.x.shape[1]
-
-    model = GCN_Model(
-        in_channels=in_channels,
-        hidden_channels=hidden_channels,
-        out_channels=out_channels
-    )
-    model_path = config.gcn_model_path
-
-    state_dict = torch.load(model_path, map_location="cpu")
-    model.load_state_dict(state_dict)
-    model.eval()
-
-    if link_pairs_to_predict is None:
-        if file_path == None:
-            file_path = config.test_data
-        test_df = pd.read_csv(file_path, sep=' ', header=None, names=['src', 'dst'])
-        test_edge_pairs = torch.tensor(test_df[['src', 'dst']].values.T, dtype=torch.long)
-
-    with torch.no_grad():
-        z = model.encode(dataset.x, dataset.edge_index)
-        test_pred = model.decode_mlp(z, test_edge_pairs)
-        test_pred = test_pred.cpu().numpy()
-
-    test_pred = (test_pred > 0.5).astype(int)
-
-    return test_pred
 
 
 def predict_seal_model(model_path=None, file_path=None, link_pairs_to_predict=None):
@@ -107,6 +71,43 @@ def predict_seal_model(model_path=None, file_path=None, link_pairs_to_predict=No
     return predictions
 
 
+def predict_sageconv_model(model_path=None, file_path=None, link_pairs_to_predict=None):
+    hidden_channels = config.train_params['SageConv_Model']['hidden_channels']
+    out_channels = config.train_params['SageConv_Model']['out_channels']
+
+    node_feature_file = config.node_features
+    edge_file = config.train_data
+
+    dataset = ACTORNETWORKData_v2(node_feature_file, edge_file)
+    in_channels = dataset.x.shape[1]
+
+    model = SageConv_Model(
+        in_channels=in_channels,
+        hidden_channels=hidden_channels,
+        out_channels=out_channels
+    )
+    model_path = config.sageconv_model_path
+
+    state_dict = torch.load(model_path, map_location="cpu")
+    model.load_state_dict(state_dict)
+    model.eval()
+
+    if link_pairs_to_predict is None:
+        if file_path == None:
+            file_path = config.test_data
+        test_df = pd.read_csv(file_path, sep=' ', header=None, names=['src', 'dst'])
+        test_edge_pairs = torch.tensor(test_df[['src', 'dst']].values.T, dtype=torch.long)
+
+    with torch.no_grad():
+        z = model.encode(dataset.x, dataset.edge_index)
+        test_pred = model.decode_mlp(z, test_edge_pairs)
+        test_pred = test_pred.cpu().numpy()
+
+    test_pred = (test_pred > 0.5).astype(int)
+
+    return test_pred
+
+
 if __name__ == "__main__":
     config = CONFIG()
     # test_path = "data/test.txt"
@@ -118,10 +119,10 @@ if __name__ == "__main__":
     test_set = [[int(element[0]), int(element[1])] for element in test_set]
 
     # model_path = config.seal_model_path
-    model_path = config.gcn_model_path
+    model_path = config.sageconv_model_path
 
     # predictions = predict_seal_model(
-    predictions = predict_gcn_model(
+    predictions = predict_sageconv_model(
         model_path=model_path,
         file_path=test_file_path,
     )

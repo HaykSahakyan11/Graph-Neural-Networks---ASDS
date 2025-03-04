@@ -9,9 +9,9 @@ from src.config import CONFIG
 config = CONFIG()
 
 
-class GCN_Model(torch.nn.Module):
+class SageConv_Model(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
-        super(GCN_Model, self).__init__()
+        super(SageConv_Model, self).__init__()
         self.conv1 = SAGEConv(in_channels, hidden_channels)
         self.conv2 = SAGEConv(hidden_channels, out_channels)
         self.lin = torch.nn.Linear(2 * out_channels, 1)
@@ -32,9 +32,9 @@ class GCN_Model(torch.nn.Module):
         return self.decode_mlp(z, edge_pairs)
 
 
-class GCNModel(nn.Module):
+class GCNGATModel(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, dropout=0.3):
-        super(GCNModel, self).__init__()
+        super(GCNGATModel, self).__init__()
 
         self.conv1 = GCNConv(in_channels, hidden_channels)
         self.bn1 = BatchNorm(hidden_channels)
@@ -78,7 +78,6 @@ class GCNModel(nn.Module):
         x = self.dropout(x)
         x = x + self.res3(x_input3)
 
-        # Layer 4
         x = self.conv4(x, edge_index)
         x = self.projection(x)
 
@@ -265,115 +264,3 @@ class ImprovedSEALModel(nn.Module):
 
         graph_emb = self.readout(x4, batch)
         return graph_emb
-
-
-class EvenBetterSEALModel(nn.Module):
-
-    def __init__(self, in_channels, hidden_channels=256, out_channels=64, dropout=0.3):
-        super(EvenBetterSEALModel, self).__init__()
-
-        self.gcn1 = GCNConv(in_channels, hidden_channels)
-        self.ln1 = nn.LayerNorm(hidden_channels)
-        self.res1 = nn.Linear(in_channels, hidden_channels) if in_channels != hidden_channels else None
-
-        hidden2 = hidden_channels // 2
-        self.gat2 = GATConv(hidden_channels, hidden2, heads=4, concat=False)
-        self.ln2 = nn.LayerNorm(hidden2)
-        self.res2 = nn.Linear(hidden_channels, hidden2)
-
-        hidden3 = hidden2 // 2 if hidden2 >= 2 else 1
-        self.sage3 = SAGEConv(hidden2, hidden3)
-        self.ln3 = nn.LayerNorm(hidden3)
-        self.res3 = nn.Linear(hidden2, hidden3)
-
-        self.gc4 = GCNConv(hidden3, out_channels)
-        self.ln4 = nn.LayerNorm(out_channels)
-        self.res4 = nn.Linear(hidden3, out_channels) if hidden3 != out_channels else None
-
-        self.dropout = nn.Dropout(p=dropout)
-
-        self.readout_linear = nn.Linear(out_channels, 1)  # used to produce attention/gates
-
-        self.link_mlp = nn.Sequential(
-            nn.Linear(2 * out_channels, out_channels),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(out_channels, out_channels),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(out_channels, 1)
-        )
-
-    def forward(self, x, edge_index, batch, link_indices):
-        if batch is None or batch.numel() == 0 or batch.shape[0] != x.shape[0]:
-            batch = torch.arange(x.size(0), device=x.device)
-
-        h1 = self.gcn1(x, edge_index)
-        if self.res1 is not None:
-            h1 = h1 + self.res1(x)
-        h1 = self.ln1(h1)
-        h1 = F.relu(h1)
-        h1 = self.dropout(h1)
-
-        h2 = self.gat2(h1, edge_index)
-        h2 = h2 + self.res2(h1)
-        h2 = self.ln2(h2)
-        h2 = F.relu(h2)
-        h2 = self.dropout(h2)
-
-        h3 = self.sage3(h2, edge_index)
-        h3 = h3 + self.res3(h2)
-        h3 = self.ln3(h3)
-        h3 = F.relu(h3)
-        h3 = self.dropout(h3)
-
-        h4 = self.gc4(h3, edge_index)
-        if self.res4 is not None:
-            h4 = h4 + self.res4(h3)
-        h4 = self.ln4(h4)
-        h4 = F.relu(h4)
-        h4 = self.dropout(h4)
-
-        gate_scores = torch.sigmoid(self.readout_linear(h4))  # shape [num_nodes, 1]
-        gated = h4 * gate_scores  # shape [num_nodes, out_channels]
-        gated_sum = torch.zeros(batch.max().item() + 1, h4.size(1), device=h4.device)
-        denom_sum = torch.zeros(batch.max().item() + 1, 1, device=h4.device)
-        gated_sum = gated_sum.scatter_add_(0, batch.unsqueeze(-1).expand_as(gated), gated)
-        denom_sum = denom_sum.scatter_add_(0, batch.unsqueeze(-1), gate_scores)
-        denom_sum = denom_sum + 1e-8
-        graph_emb = gated_sum / denom_sum
-
-        src_emb = graph_emb[link_indices[0]]
-        dst_emb = graph_emb[link_indices[1]]
-        link_features = torch.cat([src_emb, dst_emb], dim=1)
-        logits = self.link_mlp(link_features)
-        link_prob = torch.sigmoid(logits)
-        return link_prob.squeeze(-1)
-
-    def get_embeddings(self, x, edge_index, batch):
-        if batch is None or batch.numel() == 0 or batch.shape[0] != x.shape[0]:
-            batch = torch.arange(x.size(0), device=x.device)
-
-        h1 = self.gcn1(x, edge_index)
-        if self.res1 is not None:
-            h1 = h1 + self.res1(x)
-        h1 = self.ln1(h1)
-        h1 = F.relu(h1)
-
-        h2 = self.gat2(h1, edge_index)
-        h2 = h2 + self.res2(h1)
-        h2 = self.ln2(h2)
-        h2 = F.relu(h2)
-
-        h3 = self.sage3(h2, edge_index)
-        h3 = h3 + self.res3(h2)
-        h3 = self.ln3(h3)
-        h3 = F.relu(h3)
-
-        h4 = self.gc4(h3, edge_index)
-        if self.res4 is not None:
-            h4 = h4 + self.res4(h3)
-        h4 = self.ln4(h4)
-        h4 = F.relu(h4)
-
-        return h4

@@ -134,9 +134,12 @@ class ACTORNETWORKData_v2(Data):
         #     betweenness_tensor, eigenvector_tensor, jaccard_tensor,
         #     adamic_tensor, resource_tensor
         # ], dim=1)
-        x_aug = torch.cat([x, deg, pagerank_tensor], dim=1)
+        x_aug = torch.cat([x, deg], dim=1)
+        # x_aug = torch.cat([x, deg, pagerank_tensor], dim=1)
 
-        super().__init__(x=x_aug, edge_index=edge_index)
+        # super().__init__(x=x_aug, edge_index=edge_index)
+
+        super().__init__(x=x, edge_index=edge_index)
 
         self.train_edge_pairs = torch.tensor(train_df[['src', 'dst']].values.T, dtype=torch.long)
         self.train_labels = torch.tensor(train_df['label'].values, dtype=torch.float)
